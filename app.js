@@ -4,7 +4,10 @@ const express=require("express");
 const bodyparser=require("body-parser");
 const mongoose=require("mongoose");
 const ejs=require("ejs");
-const encrypt=require("mongoose-encryption");
+// const encrypt=require("mongoose-encryption");
+// const md5=require("md5");
+const bcrypt=require("bcrypt");
+const saltrounds=10;
 
 const app=express();
 app.use(bodyparser.urlencoded({extended:true}));
@@ -21,7 +24,7 @@ const userschema=new mongoose.Schema({
 
 // encryption
 
-userschema.plugin(encrypt, { secret:process.env.SECRET, encryptedFields: ['password']});
+// userschema.plugin(encrypt, { secret:process.env.SECRET, encryptedFields: ['password']});
 
 
 const User=new mongoose.model("user",userschema);
@@ -51,18 +54,23 @@ app.get("/register",function(req,res){
   res.render("register");
 });
 app.post("/register",(req,res)=>{
-   const newuser=new User({
-     email:req.body.username,
-     password:req.body.password
-   });
-   newuser.save((err)=>{
-     if(err){
-       console.log(err);
-     }else{
-       res.render("secrets");
-     }
-   });
+  bcrypt.hash(req.body.password, saltrounds, function(err, hash) {
+      // Store hash in your password DB.
+      const newuser=new User({
+        email:req.body.username,
+        password:hash
+      });
+      newuser.save((err)=>{
+        if(err){
+          console.log(err);
+        }else{
+          res.render("secrets");
+        }
+      });
+     });
 });
+
+
 
 
 
@@ -71,21 +79,36 @@ app.post("/register",(req,res)=>{
 app.post("/login",(req,res)=>{
   const username=req.body.username;
   const password=req.body.password;
+  // const password=md5(req.body.password);
+
 
   User.findOne({email:username}, (err,founduser)=>{
     if(err){
       console.log(err);
     }else{
       if(founduser){
-        if(founduser.password === password){
-          res.render("secrets");
-        }else(
-          res.send(  "please make sure your password is  correct")
-            // console.log("please make sure your password is  correct")
-        )
-      }
-    }
-  });
+        // Load hash from your password DB.
+        bcrypt.compare(password,founduser.password,(err, result)=> {
+          // result == true
+          if(result=== true){
+            res.render("secrets");
+          }else{
+            res.send("please make sure your password is  correct")
+          }
+
+        });
+        // this was for md5 hash
+
+        // if(founduser.password === password){
+        //   res.render("secrets");
+      // }else(
+      //   res.send(  "please make sure your password is  correct")
+      //     // console.log("please make sure your password is  correct")
+      // )
+      //  }
+     }
+    };
+});
 });
 
 
