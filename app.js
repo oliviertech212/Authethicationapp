@@ -36,7 +36,7 @@ const userschema=new mongoose.Schema({
   password:String,
   // for getting our user // ID
   googleId:String,
-  // secret:String
+  secret:String
 })
 // set up userSchema to use passport local mongoose as a plugin.
 userschema.plugin(passportlocalmongoose);
@@ -119,32 +119,32 @@ app.get("/register",function(req,res){
 // secrets route
 app.get("/secrets",(req,res)=>{
   // after submiting ourn user secret into db we no longer need
-  if (req.isAuthenticated()){
-    res.render("secrets");
-  }else{
-    res.redirect("/login");
-  }
+  // if (req.isAuthenticated()){
+  //   res.render("secrets");
+  // }else{
+  //   res.redirect("/login");
+  // }
 
- // User.find({"secret":{$ne:null}}, (err,foundusers)=>{
- //   if(err){
- //     console.log(err);
- //   }else{
- //     res.render("secrets",{userwithsecrets:foundusers});
- //   }
- // })
+ User.find({"secret":{$ne:null}}, (err,foundusers)=>{
+   if(err){
+     console.log(err);
+   }else{
+     res.render("secrets",{userwithsecrets:foundusers});
+   }
+ })
 
 });
 
 
 
 // submit route
-// app.get("/submit",(req,res)=>{
-//   if (req.isAuthenticated()){
-//     res.render("submit");
-//   }else{
-//     res.redirect("/login");
-//   }
-// });
+app.get("/submit",(req,res)=>{
+  if (req.isAuthenticated()){
+    res.render("submit");
+  }else{
+    res.redirect("/login");
+  }
+});
 
 app.post("/submit",(req,res)=>{
   const submitsecret=req.body.secret;
